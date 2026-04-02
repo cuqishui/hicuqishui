@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>调料订货记录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .header .date {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tab-bar {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .order-form {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .quick-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .quick-item {
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-item:active {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .submit-btn:active {
+            opacity: 0.9;
+        }
+
+        .order-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .order-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .order-list-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .clear-btn {
+            padding: 5px 10px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .order-item {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .order-item.completed {
+            opacity: 0.6;
+        }
+
+        .order-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .shop-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .order-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .order-content {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .done-btn {
+            background: #2ed573;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .preset-shops {
+            margin-top: 10px;
+        }
+
+        .preset-shops label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .shop-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .shop-btn {
+            padding: 6px 10px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .shop-btn:active {
+            background: #c8e6c9;
+        }
+
+        /* 调料管理样式 */
+        .manage-section {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .manage-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .add-form input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .add-form select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 70px;
+        }
+
+        .add-btn {
+            padding: 10px 15px;
+            background: #2ed573;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .spice-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .spice-tag {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            background: #fff3e0;
+            color: #e65100;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .spice-tag .del {
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        .spice-tag .del:hover {
+            opacity: 1;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: #f5f5f5;
+            color: #666;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .tip {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+
+        /* 工具栏样式 */
+        .toolbar {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            z-index: 100;
+        }
+
+        .sync-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4a90d9, #357abd);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 144, 217, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .sync-btn:active {
+            opacity: 0.9;
+        }
+
+        .sync-btn.syncing {
+            background: #999;
+            cursor: wait;
+        }
+
+        .sync-btn.success {
+            background: #2ed573;
+        }
+
+        .order-count-badge {
+            background: rgba(255,255,255,0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧂 调料订货记录</h1>
+        <div class="date" id="currentDate"></div>
+    </div>
+
+    <div class="tab-bar">
+        <div class="tab active" onclick="switchTab('order')">📝 订货</div>
+        <div class="tab" onclick="switchTab('manage')">⚙️ 管理</div>
+    </div>
+
+    <!-- 订货页面 -->
+    <div class="section active" id="orderSection">
+        <div class="order-form">
+            <div class="form-title">📝 快速添加订单</div>
+
+            <div class="preset-shops">
+                <label>常用店铺（点一下快速选择）：</label>
+                <div class="shop-buttons" id="shopButtons"></div>
+            </div>
+
+            <div class="form-group" style="margin-top: 12px;">
+                <label>店铺名称</label>
+                <input type="text" id="shopName" placeholder="点击上方按钮或手动输入">
+            </div>
+
+            <div class="form-group">
+                <label>订货内容（点上方按钮快速添加）</label>
+                <div class="quick-items" id="quickItems"></div>
+                <textarea id="orderContent" rows="4" placeholder="例：花椒3斤、干辣椒5斤"></textarea>
+            </div>
+
+            <button class="submit-btn" onclick="addOrder()">✅ 添加订单</button>
+        </div>
+
+        <div class="order-list">
+            <div class="order-list-header">
+                <div class="order-list-title">📋 今日订单 (<span id="orderCount">0</span>条)</div>
+                <button class="clear-btn" onclick="clearAll()">清空</button>
+            </div>
+            <div id="orderList"></div>
+        </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="sync-btn" onclick="syncToFeishu()" id="syncBtn">
+            ☁️ 同步到腾讯文档
+        </button>
+        <button class="sync-btn" onclick="copyToWechat()" style="background:#07c160;">
+            📋 复制到微信
+        </button>
+    </div>
+
+    <!-- 管理页面 -->
+    <div class="section" id="manageSection">
+        <div class="manage-section">
+            <div class="manage-title">🧂 添加调料</div>
+            <div class="add-form">
+                <input type="text" id="newSpiceName" placeholder="调料名称，如：花椒">
+                <select id="newSpiceUnit">
+                    <option value="斤">斤</option>
+                    <option value="件">件</option>
+                    <option value="瓶">瓶</option>
+                    <option value="袋">袋</option>
+                    <option value="包">包</option>
+                    <option value="个">个</option>
+                </select>
+                <button class="add-btn" onclick="addSpice()">添加</button>
+            </div>
+            <div class="tip">💡 点击"×"删除不需要的调料</div>
+        </div>
+
+        <div class="manage-section">
+            <div class="manage-title">📦 当前调料列表（<span id="spiceCount">0</span>种）</div>
+            <div class="spice-list" id="spiceList"></div>
+        </div>
+
+        <div class="manage-section">
+            <button class="reset-btn" onclick="resetSpices()">🔄 恢复默认调料</button>
+        </div>
+    </div>
+
+    <script>
+        // 默认调料列表
+        const defaultSpices = [
+            { name: '花椒', unit: '斤' },
+            { name: '干辣椒', unit: '斤' },
+            { name: '豆瓣', unit: '件' },
+            { name: '芝麻', unit: '斤' },
+            { name: '八角', unit: '斤' },
+            { name: '桂皮', unit: '斤' },
+            { name: '冰糖', unit: '斤' },
+            { name: '白糖', unit: '斤' },
+            { name: '生抽', unit: '瓶' },
+            { name: '老抽', unit: '瓶' },
+            { name: '料酒', unit: '瓶' },
+            { name: '鸡精', unit: '斤' },
+            { name: '盐', unit: '斤' },
+            { name: '孜然', unit: '斤' },
+        ];
+
+        // 从localStorage加载数据
+        let spices = JSON.parse(localStorage.getItem('customSpices'));
+        if (!spices) {
+            spices = [...defaultSpices];
+        }
+
+        let orders = JSON.parse(localStorage.getItem('spiceOrders') || '[]');
+        let shops = JSON.parse(localStorage.getItem('spiceShops') || '[]');
+        let todayDate = new Date().toDateString();
+
+        // 切换标签
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+            if (tab === 'order') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('orderSection').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('manageSection').classList.add('active');
+            }
+        }
+
+        // 检查是否是今天的数据
+        function checkDate() {
+            const storedDate = localStorage.getItem('spiceOrdersDate');
+            if (storedDate !== todayDate) {
+                orders = [];
+                saveOrders();
+            }
+        }
+
+        // 初始化
+        function init() {
+            checkDate();
+            renderQuickItems();
+            renderShopButtons();
+            renderOrders();
+            renderSpiceList();
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('zh-CN', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // 渲染快捷调料按钮
+        function renderQuickItems() {
+            const container = document.getElementById('quickItems');
+            container.innerHTML = spices.map(s => 
+                `<div class="quick-item" onclick="addSpiceToInput('${s.name}', '${s.unit}')">${s.name}</div>`
+            ).join('');
+        }
+
+        // 渲染调料管理列表
+        function renderSpiceList() {
+            const container = document.getElementById('spiceList');
+            const countEl = document.getElementById('spiceCount');
+            countEl.textContent = spices.length;
+
+            container.innerHTML = spices.map((s, i) => 
+                `<div class="spice-tag">
+                    ${s.name}（${s.unit}）
+                    <span class="del" onclick="deleteSpice(${i})">×</span>
+                </div>`
+            ).join('');
+        }
+
+        // 添加调料
+        function addSpice() {
+            const name = document.getElementById('newSpiceName').value.trim();
+            const unit = document.getElementById('newSpiceUnit').value;
+
+            if (!name) {
+                showToast('请输入调料名称');
+                return;
+            }
+
+            // 检查是否已存在
+            if (spices.some(s => s.name === name)) {
+                showToast('该调料已存在');
+                return;
+            }
+
+            spices.push({ name, unit });
+            localStorage.setItem('customSpices', JSON.stringify(spices));
+            renderSpiceList();
+            renderQuickItems();
+
+            document.getElementById('newSpiceName').value = '';
+            showToast('✅ 已添加');
+        }
+
+        // 删除调料
+        function deleteSpice(index) {
+            showConfirm(`确定删除"${spices[index].name}"？`, () => {
+                spices.splice(index, 1);
+                localStorage.setItem('customSpices', JSON.stringify(spices));
+                renderSpiceList();
+                renderQuickItems();
+                showToast('已删除');
+            });
+        }
+
+        // 恢复默认
+        function resetSpices() {
+            if (confirm('确定恢复默认调料列表？')) {
+                spices = [...defaultSpices];
+                localStorage.setItem('customSpices', JSON.stringify(spices));
+                renderSpiceList();
+                renderQuickItems();
+                showToast('已恢复默认');
+            }
+        }
+
+        // 渲染常用店铺按钮
+        function renderShopButtons() {
+            const container = document.getElementById('shopButtons');
+            if (shops.length === 0) {
+                container.innerHTML = '<span style="color:#999;font-size:13px;">暂无常用店铺</span>';
+                return;
+            }
+            container.innerHTML = shops.map(s => 
+                `<div class="shop-btn" onclick="selectShop('${s}')">${s}</div>`
+            ).join('');
+        }
+
+        // 添加调料到文本框
+        function addSpiceToInput(name, unit) {
+            const textarea = document.getElementById('orderContent');
+            const current = textarea.value.trim();
+            const newItem = `${name} ${unit}`;
+            if (current) {
+                textarea.value = current + '\n' + newItem;
+            } else {
+                textarea.value = newItem;
+            }
+        }
+
+        // 选择店铺
+        function selectShop(name) {
+            document.getElementById('shopName').value = name;
+        }
+
+        // 添加订单
+        function addOrder() {
+            const shopName = document.getElementById('shopName').value.trim();
+            const orderContent = document.getElementById('orderContent').value.trim();
+
+            if (!shopName) {
+                showToast('请输入店铺名称');
+                return;
+            }
+            if (!orderContent) {
+                showToast('请输入订货内容');
+                return;
+            }
+
+            const order = {
+                id: Date.now(),
+                shop: shopName,
+                content: orderContent,
+                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                completed: false
+            };
+
+            orders.unshift(order);
+
+            // 保存店铺到常用列表
+            if (!shops.includes(shopName)) {
+                shops.unshift(shopName);
+                if (shops.length > 20) shops.pop();
+                localStorage.setItem('spiceShops', JSON.stringify(shops));
+                renderShopButtons();
+            }
+
+            saveOrders();
+            renderOrders();
+            updateSyncButton();
+
+            // 清空表单
+            document.getElementById('shopName').value = '';
+            document.getElementById('orderContent').value = '';
+
+            showToast('✅ 订单已添加');
+        }
+
+        // 保存订单
+        function saveOrders() {
+            localStorage.setItem('spiceOrders', JSON.stringify(orders));
+            localStorage.setItem('spiceOrdersDate', todayDate);
+        }
+
+        // 渲染订单列表
+        function renderOrders() {
+            const container = document.getElementById('orderList');
+            const countEl = document.getElementById('orderCount');
+
+            countEl.textContent = orders.length;
+
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size:40px;margin-bottom:10px;">📋</div>
+                        <div>暂无订单</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="order-item ${order.completed ? 'completed' : ''}">
+                    <div class="order-item-header">
+                        <div class="shop-name">🏪 ${order.shop}</div>
+                        <div class="order-time">${order.time}</div>
+                    </div>
+                    <div class="order-content">${order.content.replace(/\n/g, '<br>')}</div>
+                    <div class="order-actions">
+                        <button class="action-btn done-btn" onclick="toggleDone(${order.id})">
+                            ${order.completed ? '↩️ 恢复' : '✅ 完成'}
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteOrder(${order.id})">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 标记完成/未完成
+        function toggleDone(id) {
+            const order = orders.find(o => o.id === id);
+            if (order) {
+                order.completed = !order.completed;
+                saveOrders();
+                renderOrders();
+                updateSyncButton();
+            }
+        }
+
+        // 删除订单
+        function deleteOrder(id) {
+            showConfirm('确定删除这条订单？', () => {
+                orders = orders.filter(o => o.id !== id);
+                saveOrders();
+                renderOrders();
+                updateSyncButton();
+                showToast('已删除');
+            });
+        }
+
+        // 清空所有
+        function clearAll() {
+            if (orders.length === 0) {
+                showToast('没有订单可清空');
+                return;
+            }
+            showConfirm('确定清空所有今日订单？', () => {
+                orders = [];
+                saveOrders();
+                renderOrders();
+                updateSyncButton();
+                showToast('已清空所有订单');
+            });
+        }
+
+        // 显示提示
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 1500);
+        }
+
+        // 自定义确认弹窗
+        function showConfirm(message, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
+            overlay.innerHTML = `
+                <div style="background:white;border-radius:12px;padding:24px;max-width:280px;width:80%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                    <div style="margin-bottom:20px;font-size:16px;color:#333;">${message}</div>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding:10px 20px;border:none;border-radius:6px;background:#ddd;color:#333;cursor:pointer;font-size:14px;">取消</button>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove();window._confirmResult=true;" style="padding:10px 20px;border:none;border-radius:6px;background:#ff4757;color:white;cursor:pointer;font-size:14px;">确定</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            overlay.querySelector('button:last-child').onclick = () => {
+                overlay.remove();
+                onConfirm();
+            };
+            overlay.querySelector('button:first-child').onclick = () => overlay.remove();
+        }
+
+        // 复制到微信
+        function copyToWechat() {
+            if (orders.length === 0) {
+                showToast('没有订单可复制');
+                return;
+            }
+            const today = new Date().toLocaleDateString('zh-CN');
+            let text = `📝 ${today} 订货清单\n`;
+            text += '─'.repeat(15) + '\n';
+            orders.forEach((order, i) => {
+                text += `${i + 1}. 🏪 ${order.shop}\n`;
+                text += `   ${order.content}\n`;
+                text += `   ⏰ ${order.time}\n`;
+            });
+            text += '─'.repeat(15);
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('已复制，打开微信粘贴发送');
+            }).catch(() => {
+                showToast('复制失败，请手动选择复制');
+            });
+        }
+
+        // 同步到腾讯文档
+        async function syncToFeishu() {
+            const btn = document.getElementById('syncBtn');
+            const pendingOrders = orders.filter(o => !o.completed);
+
+            if (pendingOrders.length === 0) {
+                showToast('没有待同步的订单');
+                return;
+            }
+
+            btn.classList.add('syncing');
+            btn.innerHTML = '⏳ 同步中...';
+
+            try {
+                const response = await fetch('http://localhost:8765/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orders: pendingOrders,
+                        file_id: 'fkBCoWeGqqfN',
+                        sheet_id: 'BB08J2'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    btn.classList.remove('syncing');
+                    btn.classList.add('success');
+                    btn.innerHTML = '✅ 同步成功';
+                    showToast(`已同步 ${pendingOrders.length} 条订单到腾讯文档`);
+                    setTimeout(() => {
+                        btn.classList.remove('success');
+                        btn.innerHTML = '☁️ 同步到腾讯文档';
+                    }, 2000);
+                } else {
+                    throw new Error(result.message || '同步失败');
+                }
+            } catch (error) {
+                btn.classList.remove('syncing');
+                btn.innerHTML = '☁️ 同步到腾讯文档';
+                showToast('同步失败: ' + error.message);
+                console.error('Sync error:', error);
+            }
+        }
+
+        // 更新同步按钮状态
+        function updateSyncButton() {
+            const btn = document.getElementById('syncBtn');
+            const pendingCount = orders.filter(o => !o.completed).length;
+            if (pendingCount > 0) {
+                btn.innerHTML = `☁️ 同步到腾讯文档 <span class="order-count-badge">${pendingCount}条</span>`;
+            } else {
+                btn.innerHTML = '☁️ 同步到腾讯文档';
+            }
+        }
+
+        init();
+        updateSyncButton();
+    </script>
+</body>
+</html>
